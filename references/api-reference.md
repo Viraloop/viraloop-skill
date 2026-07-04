@@ -59,7 +59,7 @@ Response:
 
 `GET /credits`
 
-Returns the team's current credit balance plus a paginated ledger of credit movements (top-ups, spending, rewards). Content generation in v1 does not consume credits; influencer media generation (coming in v1.1) does.
+Returns the team's current credit balance plus a paginated ledger of credit movements (top-ups, spending, rewards, refunds). Turbo content generation does not consume credits; influencer media generation does (createInfluencerVideo: 20 credits, createInfluencer preview: 10). Failed generations are refunded automatically; running out of credits returns HTTP 402 with error type insufficient_credits.
 
 - Scopes: `credits:read`
 - Credits: none
@@ -72,7 +72,7 @@ Query parameters:
 | --- | --- | --- | --- |
 | `page` | integer | no | Page number, starting at 1 |
 | `limit` | integer | no | Items per page (max 100) |
-| `type` | `recurring` \| `topup` \| `spending` \| `trial` \| `spin` \| `reward` | no | Filter by entry type |
+| `type` | `recurring` \| `topup` \| `spending` \| `trial` \| `spin` \| `reward` \| `refund` | no | Filter by entry type |
 
 Example:
 
@@ -1135,7 +1135,7 @@ Response:
 
 `POST /influencers/{id}/videos`
 
-Generates a talking-head UGC video of the influencer speaking your script (Seedance 2, 9:16). Costs 20 credits, deducted up front. Asynchronous: returns 202 with the video in processing; poll GET /videos/{videoId} until completed or failed (typically 2 to 10 minutes).
+Generates a talking-head UGC video of the influencer speaking your script (Seedance 2, 9:16). Costs 20 credits, deducted up front and refunded automatically if generation fails. Insufficient credits returns HTTP 402 (insufficient_credits). Asynchronous: returns 202 with the video in processing; poll GET /videos/{videoId} until completed or failed (typically 2 to 10 minutes).
 
 - Scopes: `influencers:write`
 - Credits: 20 credits per video
