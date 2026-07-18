@@ -59,7 +59,7 @@ Response:
 
 `GET /credits`
 
-Returns the team's current credit balance plus a paginated ledger of credit movements (top-ups, spending, rewards, refunds). Turbo content generation does not consume credits; influencer media generation does (createInfluencerVideo: 20 credits, createInfluencer preview: 10). Failed generations are refunded automatically; running out of credits returns HTTP 402 with error type insufficient_credits.
+Returns the team's current credit balance plus a paginated ledger of credit movements (top-ups, spending, rewards, refunds). Turbo content generation does not consume credits; influencer media generation does (createInfluencerVideo: 5 credits per second of video, createInfluencer preview: 10). Failed generations are refunded automatically; running out of credits returns HTTP 402 with error type insufficient_credits.
 
 - Scopes: `credits:read`
 - Credits: none
@@ -1135,10 +1135,10 @@ Response:
 
 `POST /influencers/{id}/videos`
 
-Generates a talking-head UGC video of the influencer speaking your script (Seedance 2, 9:16). Costs 20 credits, deducted up front and refunded automatically if generation fails. Insufficient credits returns HTTP 402 (insufficient_credits). Asynchronous: returns 202 with the video in processing; poll GET /videos/{videoId} until completed or failed (typically 2 to 10 minutes).
+Generates a talking-head UGC video of the influencer speaking your script (Seedance 2, 9:16). Costs 5 credits per second of video (default 10s = 50 credits), deducted up front and refunded automatically if generation fails. Insufficient credits returns HTTP 402 (insufficient_credits). Asynchronous: returns 202 with the video in processing; poll GET /videos/{videoId} until completed or failed (typically 2 to 10 minutes).
 
 - Scopes: `influencers:write`
-- Credits: 20 credits per video
+- Credits: 5 credits per second (duration 5-30s; default 10s = 50 credits)
 - Rate limit: 10 per 600s
 - Supports `Idempotency-Key` header
 - Terminal states: `completed`, `failed`
@@ -1175,7 +1175,7 @@ Response:
     "influencerId": "665f1b2a9c31a2b3c4d5e720",
     "status": "processing",
     "model": "seedance_2",
-    "creditsUsed": 20,
+    "creditsUsed": 50,
     "statusUrl": "/api/v1/videos/665f1b2a9c31a2b3c4d5e730"
   }
 }
