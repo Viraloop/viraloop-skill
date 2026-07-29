@@ -46,19 +46,19 @@ viraloop posts create --video-url https://example.com/final.mp4 \
 
 Also `--image-url` (repeatable) for image/slideshow posts. Media URLs must be publicly reachable.
 
-## 5. Run a campaign (batch generate + auto-schedule)
+## 5. Run a automation (batch generate + auto-schedule)
 
 ```bash
-viraloop campaigns create --name "Launch week" --posts-per-day 2 --length-days 7 \
+viraloop automations create --name "Launch week" --posts-per-day 2 --length-days 7 \
   --accounts tiktok:<accountId> --json
-viraloop campaigns generate <campaignId> --json      # 202; generation is async
-viraloop campaigns get <campaignId> --json           # poll until status "review"
-viraloop campaigns posts <campaignId> --json         # inspect the generated posts
-viraloop campaigns launch <campaignId> --json        # schedules everything at its slot
-viraloop campaigns cancel <campaignId> --json        # stops unsent posts anytime
+viraloop automations generate <automationId> --json      # 202; generation is async
+viraloop automations get <automationId> --json           # poll until status "review"
+viraloop automations posts <automationId> --json         # inspect the generated posts
+viraloop automations launch <automationId> --json        # schedules everything at its slot
+viraloop automations cancel <automationId> --json        # stops unsent posts anytime
 ```
 
-Campaign generation typically takes a few minutes for a week of posts. After launch the campaign is hands-off: posts render and publish at their slots.
+Automation generation typically takes a few minutes for a week of posts. After launch the automation is hands-off: posts render and publish at their slots.
 
 ## 6. Talking-head influencer videos
 

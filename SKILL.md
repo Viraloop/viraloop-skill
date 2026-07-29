@@ -11,7 +11,7 @@ Viraloop generates ready-to-post short-form videos (wall-of-text, slideshow, gre
 
 - "Generate some videos/content for my brand" -> generate suggestions, show them, publish the approved ones
 - "Post this to TikTok/Reels/Shorts" or "schedule 5 posts for next week" -> create posts
-- "Run a content campaign for two weeks" -> create a campaign, generate, review, launch
+- "Run a content automation for two weeks" -> create a automation, generate, review, launch
 - "Make my AI influencer say ..." -> generate a talking-head video, then post it
 - "What is queued/posted?" or "how did my posts do?" -> list posts, read analytics
 - "How many Viraloop credits do I have?" -> credits
@@ -50,14 +50,14 @@ If npm is unavailable, fall back to the raw HTTP API (see the last section).
 | `viraloop posts get <id>` | Get a post with per-platform results | GET /posts/{id} |
 | `viraloop posts cancel <id>` | Cancel a scheduled post | DELETE /posts/{id} |
 | `viraloop calendar` | Posting calendar | GET /calendar |
-| `viraloop campaigns create` | Create a campaign | POST /campaigns |
-| `viraloop campaigns list` | List campaigns | GET /campaigns |
-| `viraloop campaigns get <id>` | Get a campaign | GET /campaigns/{id} |
-| `viraloop campaigns update <id>` | Update a draft campaign | PATCH /campaigns/{id} |
-| `viraloop campaigns generate <id>` | Generate the campaign's posts | POST /campaigns/{id}/generate |
-| `viraloop campaigns launch <id>` | Launch a reviewed campaign | POST /campaigns/{id}/launch |
-| `viraloop campaigns cancel <id>` | Cancel a campaign | POST /campaigns/{id}/cancel |
-| `viraloop campaigns posts <id>` | List a campaign's generated posts | GET /campaigns/{id}/posts |
+| `viraloop automations create` | Create an automation | POST /automations |
+| `viraloop automations list` | List automations | GET /automations |
+| `viraloop automations get <id>` | Get an automation | GET /automations/{id} |
+| `viraloop automations update <id>` | Update a draft automation | PATCH /automations/{id} |
+| `viraloop automations generate <id>` | Generate the automation's posts | POST /automations/{id}/generate |
+| `viraloop automations launch <id>` | Launch a reviewed automation | POST /automations/{id}/launch |
+| `viraloop automations cancel <id>` | Cancel an automation | POST /automations/{id}/cancel |
+| `viraloop automations posts <id>` | List an automation's generated posts | GET /automations/{id}/posts |
 | `viraloop influencers list` | List AI influencers | GET /influencers |
 | `viraloop influencers create` | Create an AI influencer | POST /influencers |
 | `viraloop influencers get <id>` | Get an influencer | GET /influencers/{id} |
@@ -65,6 +65,17 @@ If npm is unavailable, fall back to the raw HTTP API (see the last section).
 | `viraloop videos list --influencer <id>` | List an influencer's videos | GET /influencers/{id}/videos |
 | `viraloop videos get <id>` | Get a video's status | GET /videos/{id} |
 | `viraloop assets list` | List media assets | GET /assets |
+| `viraloop assets upload --url <url>` | Upload media into the workspace | POST /assets |
+| `viraloop content character-swap --video <url> --character <url>` | Swap the character in a video | POST /content/character-swap |
+| `viraloop content green-screen-mobile --screenshot <url> --presenter <url>` | Generate a presenter holding your app | POST /content/green-screen-mobile |
+| `viraloop content clone-video --image <url> --video <url>` | Clone a video's motion onto your character | POST /content/clone-video |
+| `viraloop content talking-head --script <text>` | Generate a talking-head UGC video | POST /content/talking-head |
+| `viraloop content talking-head-green-screen --script <text> --avatar <url> --demo <url>` | Generate a presenter over your demo video | POST /content/talking-head-green-screen |
+| `viraloop content product-spokesperson --script <text> --product <url>` | Generate a spokesperson holding your product | POST /content/product-spokesperson |
+| `viraloop content grid-video --prompt <text>` | Create a 2x2 grid video | POST /content/grid-video |
+| `viraloop content fade-in-video --prompt <text>` | Create a single fade-in video | POST /content/fade-in-video |
+| `viraloop content hook-demo --hook <url> --demo <url>` | Stitch a hook clip onto your demo | POST /content/hook-demo |
+| `viraloop content get <id>` | Get a studio render's status | GET /content/{id} |
 
 Full flag-level detail: references/api-reference.md (or https://viraloop.io/llms-full.txt).
 
