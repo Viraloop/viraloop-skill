@@ -55,6 +55,7 @@ If npm is unavailable, fall back to the raw HTTP API (see the last section).
 | `viraloop automations get <id>` | Get an automation | GET /automations/{id} |
 | `viraloop automations update <id>` | Update a draft automation | PATCH /automations/{id} |
 | `viraloop automations generate <id>` | Generate the automation's posts | POST /automations/{id}/generate |
+| `viraloop automations extend <id> --days <n>` | Extend an automation by more days | POST /automations/{id}/extend |
 | `viraloop automations launch <id>` | Launch a reviewed automation | POST /automations/{id}/launch |
 | `viraloop automations cancel <id>` | Cancel an automation | POST /automations/{id}/cancel |
 | `viraloop automations posts <id>` | List an automation's generated posts | GET /automations/{id}/posts |

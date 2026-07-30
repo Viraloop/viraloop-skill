@@ -887,6 +887,50 @@ Response:
 }
 ```
 
+### Extend an automation by more days
+
+`POST /automations/{id}/extend`
+
+Adds `days` more days to an active or completed automation: generates cadence.postsPerDay x days new posts, schedules them in the days after the current window and publishes them to the automation's accounts. Posts already scheduled or published are never touched. Extending a completed automation revives it to active. Asynchronous: returns 202 immediately; the automation carries extending=true until the new posts land, so poll GET /automations/{id} until it flips false.
+
+- Scopes: `automations:write`
+- Credits: none
+- Rate limit: 5 per 3600s
+- CLI: `viraloop automations extend <id> --days <n>`
+- MCP tool: `viraloop_extend_automation`
+
+Body fields:
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `days` | integer | yes | How many days to add to the automation window |
+| `workspaceId` | string | no | Workspace to operate in. Defaults to the team's default workspace. |
+
+Example:
+
+```bash
+curl -s -X POST "https://viraloop.io/api/v1/automations/<id>/extend" \
+  -H "Authorization: Bearer $VIRALOOP_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"days":7}'
+```
+
+Response:
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "665f1b2a9c31a2b3c4d5e710",
+    "kind": "automation",
+    "status": "active",
+    "extending": true,
+    "adding": 7,
+    "statusUrl": "/api/v1/automations/665f1b2a9c31a2b3c4d5e710"
+  }
+}
+```
+
 ### Launch a reviewed automation
 
 `POST /automations/{id}/launch`
