@@ -40,6 +40,7 @@ If npm is unavailable, fall back to the raw HTTP API (see the last section).
 | `viraloop whoami` | Introspect the API key | GET /me |
 | `viraloop credits` | Credit balance and ledger | GET /credits |
 | `viraloop workspaces list` | List workspaces | GET /workspaces |
+| `viraloop workspaces create` | Create a workspace | POST /workspaces |
 | `viraloop workspaces get <id>` | Get a workspace | GET /workspaces/{id} |
 | `viraloop accounts list` | List connected social accounts | GET /accounts |
 | `viraloop generate` | Generate AI post suggestions | POST /generations |
@@ -77,6 +78,7 @@ If npm is unavailable, fall back to the raw HTTP API (see the last section).
 | `viraloop content fade-in-video --prompt <text>` | Create a single fade-in video | POST /content/fade-in-video |
 | `viraloop content hook-demo --hook <url> --demo <url>` | Stitch a hook clip onto your demo | POST /content/hook-demo |
 | `viraloop content get <id>` | Get a studio render's status | GET /content/{id} |
+| `viraloop content download <id>` | Get a content piece's media files | GET /content/{id}/download |
 
 Full flag-level detail: references/api-reference.md (or https://viraloop.io/llms-full.txt).
 

@@ -157,6 +157,57 @@ Response:
 }
 ```
 
+### Create a workspace
+
+`POST /workspaces`
+
+Creates a workspace (brand) under the team. Provide the brand's website and the brand profile (identity, positioning, content angles) is generated in the background: poll getWorkspace until brandContext.status is ready. One domain can be claimed by only one workspace across all of Viraloop.
+
+- Scopes: `workspaces:write`
+- Credits: none
+- Rate limit: 60 per 3600s
+- Supports `Idempotency-Key` header
+- CLI: `viraloop workspaces create`
+- MCP tool: `viraloop_create_workspace`
+
+Body fields:
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `name` | string | yes |  |
+| `websiteUrl` | string | no | The brand's website; seeds the auto-generated brand profile |
+| `logoUrl` | string | no |  |
+
+Example:
+
+```bash
+curl -s -X POST "https://viraloop.io/api/v1/workspaces" \
+  -H "Authorization: Bearer $VIRALOOP_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Acme","websiteUrl":"https://acme.com"}'
+```
+
+Response:
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "665f1b2a9c31a2b3c4d5e6f9",
+    "name": "Acme",
+    "isDefault": false,
+    "website": {
+      "url": "https://acme.com",
+      "domain": "acme.com"
+    },
+    "preferences": {
+      "timezone": "",
+      "contentLanguage": "English"
+    }
+  }
+}
+```
+
 ### Get a workspace
 
 `GET /workspaces/{id}`
@@ -1901,6 +1952,52 @@ Response:
     "videoUrl": "https://cdn.viraloop.io/renders/character_swap.mp4",
     "thumbnailUrl": "https://cdn.viraloop.io/renders/character_swap.jpg",
     "durationSec": 8
+  }
+}
+```
+
+### Get a content piece's media files
+
+`GET /content/{id}/download`
+
+Returns the finished media files (mp4 for video formats, the slide images for carousels) for a content piece. This is the endpoint to fetch media through when serving it to your own users: retrieving files here marks the piece accepted for metered (enterprise) billing, exactly like publishing it does. Returns 409 while the render is still processing.
+
+- Scopes: `generations:read`
+- Credits: none
+- CLI: `viraloop content download <id>`
+- MCP tool: `viraloop_download_content`
+
+Query parameters:
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `workspaceId` | string | no | Workspace to operate in. Defaults to the team's default workspace. |
+
+Example:
+
+```bash
+curl -s "https://viraloop.io/api/v1/content/<id>/download" \
+  -H "Authorization: Bearer $VIRALOOP_API_KEY"
+```
+
+Response:
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "665f1b2a9c31a2b3c4d5e757",
+    "format": "Slideshow",
+    "files": [
+      {
+        "type": "image",
+        "url": "https://cdn.viraloop.io/renders/slide-1.jpg"
+      },
+      {
+        "type": "image",
+        "url": "https://cdn.viraloop.io/renders/slide-2.jpg"
+      }
+    ]
   }
 }
 ```
