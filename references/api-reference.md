@@ -420,7 +420,7 @@ Response:
 
 `GET /generations/{id}`
 
-Returns one suggestion including its full deck (the editable render blueprint), influencer, angle, rationale and remix source.
+Returns one suggestion including its full deck (the editable render blueprint), influencer, angle, rationale and remix source. The deck IS the free preview: render its slide images / clips with the caption text boxes overlaid client-side to let a user accept or skip. Previewing and accepting are free; billing only happens when media is downloaded or published.
 
 - Scopes: `generations:read`
 - Credits: none
