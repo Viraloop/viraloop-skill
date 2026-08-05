@@ -464,6 +464,44 @@ Response:
 }
 ```
 
+### Accept a generation into the library
+
+`POST /generations/{id}/accept`
+
+Accepts a generated suggestion and saves it to the content library, returning a contentId. That id is what GET /content/{id}/download (fetch the media files) and POST /posts (publish) operate on. Idempotent: re-accepting returns the same contentId. Counts toward the plan's monthly content allowance.
+
+- Scopes: `generations:write`
+- Credits: none
+- Supports `Idempotency-Key` header
+- CLI: `viraloop generations accept <id>`
+- MCP tool: `viraloop_accept_generation`
+
+Query parameters:
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `workspaceId` | string | no | Workspace to operate in. Defaults to the team's default workspace. |
+
+Example:
+
+```bash
+curl -s -X POST "https://viraloop.io/api/v1/generations/<id>/accept" \
+  -H "Authorization: Bearer $VIRALOOP_API_KEY"
+```
+
+Response:
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "665f1b2a9c31a2b3c4d5e711",
+    "status": "accepted",
+    "contentId": "665f1b2a9c31a2b3c4d5e757"
+  }
+}
+```
+
 ## posts
 
 ### Create and schedule a post
@@ -1919,7 +1957,7 @@ Response:
 
 `GET /content/{id}`
 
-Polls a video created by one of the /content operations. status is processing, ready or failed; when ready, videoUrl holds the finished 9:16 mp4. Publish it with POST /posts using contentId (which also works for the deck formats, where there is no single mp4 until it renders). A failed render has already refunded its credits.
+Polls a piece created by the /content operations or accepted from a generation. status is processing, ready or failed. Video formats carry videoUrl when ready; DECK formats (slideshow, wall of text, green screen, ...) have no flat media until rendered - publishing renders them automatically, or GET /content/{id}/download renders on demand and returns the files. A failed render has already refunded its credits.
 
 - Scopes: `generations:read`
 - Credits: undefined
@@ -1960,7 +1998,7 @@ Response:
 
 `GET /content/{id}/download`
 
-Returns the finished media files (mp4 for video formats, the slide images for carousels) for a content piece. This is the endpoint to fetch media through when serving it to your own users: retrieving files here marks the piece accepted for metered (enterprise) billing, exactly like publishing it does. Returns 409 while the render is still processing.
+Returns the finished media files (mp4 for video formats, the slide images for carousels) for a content piece. For deck formats (slideshow, wall of text, green screen and the other studio decks) the FIRST call starts the server-side render and returns 409; poll this endpoint until it returns 200 with the files (typically under a minute). Generations must be accepted first (POST /generations/{id}/accept) to get a content id. Fetching files here marks the piece accepted for metered (enterprise) billing, exactly like publishing it does.
 
 - Scopes: `generations:read`
 - Credits: none

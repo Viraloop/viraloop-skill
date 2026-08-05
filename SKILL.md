@@ -46,6 +46,7 @@ If npm is unavailable, fall back to the raw HTTP API (see the last section).
 | `viraloop generate` | Generate AI post suggestions | POST /generations |
 | `viraloop generations list` | List suggestions | GET /generations |
 | `viraloop generations get <id>` | Get a suggestion | GET /generations/{id} |
+| `viraloop generations accept <id>` | Accept a generation into the library | POST /generations/{id}/accept |
 | `viraloop posts create` | Create and schedule a post | POST /posts |
 | `viraloop posts list` | List posts | GET /posts |
 | `viraloop posts get <id>` | Get a post with per-platform results | GET /posts/{id} |
