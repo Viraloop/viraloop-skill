@@ -21,8 +21,8 @@ Viraloop generates ready-to-post short-form videos (wall-of-text, slideshow, gre
 1. Check the CLI: `viraloop --version`
 2. If not found, install it: `npm install -g viraloop` (or use `npx -y viraloop <command>` without installing)
 3. Authenticate, one of:
-   - `VIRALOOP_API_KEY` environment variable already set: nothing to do
-   - Otherwise ask the user for an API key (created at https://viraloop.io/settings/developers) and run `viraloop login`
+    - `VIRALOOP_API_KEY` environment variable already set: nothing to do
+    - Otherwise ask the user for an API key (created at https://viraloop.io/settings/developers) and run `viraloop login`
 4. Verify: `viraloop whoami`
 
 If npm is unavailable, fall back to the raw HTTP API (see the last section).
