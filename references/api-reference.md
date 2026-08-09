@@ -525,7 +525,7 @@ Body fields:
 | `suggestionId` | string | no | Publish this generated suggestion (from /generations) |
 | `contentId` | string | no | Publish a saved studio video (from any /content operation). Finished videos post as-is; deck formats render first. |
 | `deck` | object | no | Raw deck object (advanced; usually use suggestionId or contentId) |
-| `format` | `walloftext` \| `slideshow` \| `greenscreen` \| `grid2x2` \| `singlefadein` \| `videohookdemo` \| `talkingheadgreenscreen` | no | Deck format, required when deck is provided |
+| `format` | `walloftext` \| `slideshow` \| `greenscreen` \| `grid2x2` \| `listicle` \| `singlefadein` \| `videohookdemo` \| `talkingheadgreenscreen` | no | Deck format, required when deck is provided |
 | `videoUrl` | string | no | Publicly reachable video URL to post as-is |
 | `thumbnailUrl` | string | no |  |
 | `images` | array | no | Image URLs to post as an image/slideshow post |
@@ -1854,6 +1854,52 @@ Response:
     "format": "2x2 Grid Video",
     "status": "ready",
     "title": "tools every solo founder should be using:"
+  }
+}
+```
+
+### Create a listicle video
+
+`POST /content/listicle`
+
+Writes a numbered-list title plus 4 to 6 items from your brand and prompt, lays them over a stock UGC background clip that reveals one item per beat, and saves the result to your library (9:16). Costs no credits. Synchronous: the request returns when the deck is built, typically 5 to 20 seconds. Publish it with POST /posts using the deck from GET /content/{id}, or open it in the studio to edit first.
+
+- Scopes: `generations:write`
+- Credits: none
+- Rate limit: 20 per 300s
+- Supports `Idempotency-Key` header
+- CLI: `viraloop content listicle --prompt <text>`
+- MCP tool: `viraloop_create_listicle`
+
+Body fields:
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `prompt` | string | no | What the list is about. Omit to let the model pick from your brand. |
+| `mentionBusiness` | boolean | no | Make one of the items your brand. Default true. |
+| `layout` | `list` \| `pyramid` \| `checklist` \| `countdown` | no | Display style: numbered list (default), tier pyramid, checklist, or countdown to #1. |
+| `name` | string | no |  |
+| `workspaceId` | string | no | Workspace to operate in. Defaults to the team's default workspace. |
+
+Example:
+
+```bash
+curl -s -X POST "https://viraloop.io/api/v1/content/listicle" \
+  -H "Authorization: Bearer $VIRALOOP_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"prompt":"habits of founders who ship every week"}'
+```
+
+Response:
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "665f1b2a9c31a2b3c4d5e757",
+    "format": "Listicle",
+    "status": "ready",
+    "title": "5 habits of founders who ship every week:"
   }
 }
 ```
