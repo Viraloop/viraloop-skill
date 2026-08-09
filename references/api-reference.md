@@ -525,7 +525,7 @@ Body fields:
 | `suggestionId` | string | no | Publish this generated suggestion (from /generations) |
 | `contentId` | string | no | Publish a saved studio video (from any /content operation). Finished videos post as-is; deck formats render first. |
 | `deck` | object | no | Raw deck object (advanced; usually use suggestionId or contentId) |
-| `format` | `walloftext` \| `slideshow` \| `greenscreen` \| `grid2x2` \| `listicle` \| `singlefadein` \| `videohookdemo` \| `talkingheadgreenscreen` | no | Deck format, required when deck is provided |
+| `format` | `walloftext` \| `slideshow` \| `greenscreen` \| `grid2x2` \| `listicle` \| `askmeanything` \| `singlefadein` \| `videohookdemo` \| `talkingheadgreenscreen` | no | Deck format, required when deck is provided |
 | `videoUrl` | string | no | Publicly reachable video URL to post as-is |
 | `thumbnailUrl` | string | no |  |
 | `images` | array | no | Image URLs to post as an image/slideshow post |
@@ -1900,6 +1900,51 @@ Response:
     "format": "Listicle",
     "status": "ready",
     "title": "5 habits of founders who ship every week:"
+  }
+}
+```
+
+### Create an Ask Me Anything video
+
+`POST /content/ask-me-anything`
+
+Writes the question your audience actually asks plus the on-video answer from your brand and prompt, lays them over a stock UGC background clip as an IG-style question sticker, and saves the result to your library (9:16). Costs no credits. Synchronous: the request returns when the deck is built, typically 5 to 20 seconds. Publish it with POST /posts using the deck from GET /content/{id}, or open it in the studio to edit first.
+
+- Scopes: `generations:write`
+- Credits: none
+- Rate limit: 20 per 300s
+- Supports `Idempotency-Key` header
+- CLI: `viraloop content ask-me-anything --prompt <text>`
+- MCP tool: `viraloop_create_ask_me_anything`
+
+Body fields:
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `prompt` | string | no | What the question should be about. Omit to let the model pick from your brand. |
+| `mentionBusiness` | boolean | no | Name the brand in the answer. Default true. |
+| `name` | string | no |  |
+| `workspaceId` | string | no | Workspace to operate in. Defaults to the team's default workspace. |
+
+Example:
+
+```bash
+curl -s -X POST "https://viraloop.io/api/v1/content/ask-me-anything" \
+  -H "Authorization: Bearer $VIRALOOP_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"prompt":"how I stay consistent posting every day"}'
+```
+
+Response:
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "665f1b2a9c31a2b3c4d5e758",
+    "format": "Ask Me Anything",
+    "status": "ready",
+    "title": "how do you post every single day?"
   }
 }
 ```

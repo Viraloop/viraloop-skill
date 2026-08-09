@@ -77,6 +77,7 @@ If npm is unavailable, fall back to the raw HTTP API (see the last section).
 | `viraloop content product-spokesperson --script <text> --product <url>` | Generate a spokesperson holding your product | POST /content/product-spokesperson |
 | `viraloop content grid-video --prompt <text>` | Create a 2x2 grid video | POST /content/grid-video |
 | `viraloop content listicle --prompt <text>` | Create a listicle video | POST /content/listicle |
+| `viraloop content ask-me-anything --prompt <text>` | Create an Ask Me Anything video | POST /content/ask-me-anything |
 | `viraloop content fade-in-video --prompt <text>` | Create a single fade-in video | POST /content/fade-in-video |
 | `viraloop content hook-demo --hook <url> --demo <url>` | Stitch a hook clip onto your demo | POST /content/hook-demo |
 | `viraloop content get <id>` | Get a studio render's status | GET /content/{id} |
