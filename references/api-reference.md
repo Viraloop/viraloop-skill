@@ -525,7 +525,7 @@ Body fields:
 | `suggestionId` | string | no | Publish this generated suggestion (from /generations) |
 | `contentId` | string | no | Publish a saved studio video (from any /content operation). Finished videos post as-is; deck formats render first. |
 | `deck` | object | no | Raw deck object (advanced; usually use suggestionId or contentId) |
-| `format` | `walloftext` \| `slideshow` \| `greenscreen` \| `grid2x2` \| `listicle` \| `askmeanything` \| `ranking` \| `singlefadein` \| `videohookdemo` \| `talkingheadgreenscreen` | no | Deck format, required when deck is provided |
+| `format` | `walloftext` \| `slideshow` \| `greenscreen` \| `grid2x2` \| `listicle` \| `askmeanything` \| `ranking` \| `splitscreen` \| `singlefadein` \| `videohookdemo` \| `talkingheadgreenscreen` | no | Deck format, required when deck is provided |
 | `videoUrl` | string | no | Publicly reachable video URL to post as-is |
 | `thumbnailUrl` | string | no |  |
 | `images` | array | no | Image URLs to post as an image/slideshow post |
@@ -1990,6 +1990,52 @@ Response:
     "format": "Ranking",
     "status": "ready",
     "title": "ranking the ways to grow on tiktok:"
+  }
+}
+```
+
+### Create a split screen video
+
+`POST /content/split-screen`
+
+Writes an on-brand caption from your prompt (or uses the caption you pass), stacks a stock UGC content clip on top of a looping gameplay/satisfying clip, and saves the result to your library (9:16, duration follows the top clip). Costs no credits. Synchronous: the request returns when the deck is built, typically 5 to 15 seconds. Publish it with POST /posts using the deck from GET /content/{id}, or open it in the studio to edit first.
+
+- Scopes: `generations:write`
+- Credits: none
+- Rate limit: 20 per 300s
+- Supports `Idempotency-Key` header
+- CLI: `viraloop content split-screen --prompt <text>`
+- MCP tool: `viraloop_create_split_screen`
+
+Body fields:
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `prompt` | string | no | What the caption should be about. Omit to let the model pick from your brand. |
+| `caption` | string | no | Use this exact on-video caption instead of generating one. |
+| `mentionBusiness` | boolean | no | Name the brand in the caption. Default true. |
+| `name` | string | no |  |
+| `workspaceId` | string | no | Workspace to operate in. Defaults to the team's default workspace. |
+
+Example:
+
+```bash
+curl -s -X POST "https://viraloop.io/api/v1/content/split-screen" \
+  -H "Authorization: Bearer $VIRALOOP_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"prompt":"POV: you found the tool that edits for you"}'
+```
+
+Response:
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "665f1b2a9c31a2b3c4d5e75a",
+    "format": "Split Screen",
+    "status": "ready",
+    "title": "POV: you found the tool that edits for you"
   }
 }
 ```
