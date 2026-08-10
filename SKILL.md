@@ -74,6 +74,7 @@ If npm is unavailable, fall back to the raw HTTP API (see the last section).
 | `viraloop content clone-video --image <url> --video <url>` | Clone a video's motion onto your character | POST /content/clone-video |
 | `viraloop content talking-head --script <text>` | Generate a talking-head UGC video | POST /content/talking-head |
 | `viraloop content talking-head-green-screen --script <text> --avatar <url> --demo <url>` | Generate a presenter over your demo video | POST /content/talking-head-green-screen |
+| `viraloop content interview --script <text>` | Generate an interview (podcast clip) video | POST /content/interview |
 | `viraloop content product-spokesperson --script <text> --product <url>` | Generate a spokesperson holding your product | POST /content/product-spokesperson |
 | `viraloop content grid-video --prompt <text>` | Create a 2x2 grid video | POST /content/grid-video |
 | `viraloop content listicle --prompt <text>` | Create a listicle video | POST /content/listicle |

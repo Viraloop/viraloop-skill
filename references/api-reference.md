@@ -1759,6 +1759,60 @@ Response:
 }
 ```
 
+### Generate an interview (podcast clip) video
+
+`POST /content/interview`
+
+Generates a cinematic podcast-clip video: an AI guest in a studio interview setting (broadcast mic, moody lighting) speaking your script as a candid answer (Seedance, 9:16, with voice). Describe the person with gender/age/ethnicity/appearance, or pin their exact likeness with avatarImageUrl (a hosted photo; upload one with POST /assets). Costs 5 credits per second (default 10s = 50 credits), deducted up front and refunded automatically on failure; insufficient credits returns HTTP 402. Asynchronous: returns 202, then poll GET /content/{id} until ready or failed (typically 2 to 10 minutes).
+
+- Scopes: `generations:write`
+- Credits: 5 credits per second (duration 4-15s; default 10s = 50 credits)
+- Rate limit: 20 per 300s
+- Supports `Idempotency-Key` header
+- Terminal states: `ready`, `failed`
+- CLI: `viraloop content interview --script <text>`
+- MCP tool: `viraloop_create_interview`
+
+Body fields:
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `script` | string | yes | What the guest says, written as a candid answer (max 1000 chars) |
+| `avatarImageUrl` | string | no | Hosted photo pinning the guest's likeness. Overrides the persona fields. |
+| `duration` | integer | no | Seconds, default 10 |
+| `language` | string | no | Spoken language, default English |
+| `gender` | string | no | Persona hint, ignored when avatarImageUrl is set |
+| `age` | string | no | Persona hint, ignored when avatarImageUrl is set |
+| `ethnicity` | string | no | Persona hint, ignored when avatarImageUrl is set |
+| `appearance` | string | no | Free-text look, ignored when avatarImageUrl is set |
+| `captionOverlay` | boolean | no | Transcribe the speech into a styled caption track. Default true. |
+| `influencerId` | string | no | Link the result to this influencer |
+| `name` | string | no |  |
+| `workspaceId` | string | no | Workspace to operate in. Defaults to the team's default workspace. |
+
+Example:
+
+```bash
+curl -s -X POST "https://viraloop.io/api/v1/content/interview" \
+  -H "Authorization: Bearer $VIRALOOP_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"script":"Everyone thinks I got lucky. The truth is I automated the boring half of my content.","duration":10,"gender":"man","age":"30s"}'
+```
+
+Response:
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "665f1b2a9c31a2b3c4d5e75b",
+    "format": "Interview",
+    "status": "processing",
+    "statusUrl": "/api/v1/content/665f1b2a9c31a2b3c4d5e75b"
+  }
+}
+```
+
 ### Generate a spokesperson holding your product
 
 `POST /content/product-spokesperson`
