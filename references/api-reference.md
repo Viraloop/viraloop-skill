@@ -525,7 +525,7 @@ Body fields:
 | `suggestionId` | string | no | Publish this generated suggestion (from /generations) |
 | `contentId` | string | no | Publish a saved studio video (from any /content operation). Finished videos post as-is; deck formats render first. |
 | `deck` | object | no | Raw deck object (advanced; usually use suggestionId or contentId) |
-| `format` | `walloftext` \| `slideshow` \| `greenscreen` \| `grid2x2` \| `listicle` \| `askmeanything` \| `singlefadein` \| `videohookdemo` \| `talkingheadgreenscreen` | no | Deck format, required when deck is provided |
+| `format` | `walloftext` \| `slideshow` \| `greenscreen` \| `grid2x2` \| `listicle` \| `askmeanything` \| `ranking` \| `singlefadein` \| `videohookdemo` \| `talkingheadgreenscreen` | no | Deck format, required when deck is provided |
 | `videoUrl` | string | no | Publicly reachable video URL to post as-is |
 | `thumbnailUrl` | string | no |  |
 | `images` | array | no | Image URLs to post as an image/slideshow post |
@@ -1945,6 +1945,51 @@ Response:
     "format": "Ask Me Anything",
     "status": "ready",
     "title": "how do you post every single day?"
+  }
+}
+```
+
+### Create a ranking (tier list) video
+
+`POST /content/ranking`
+
+Writes a tier-list title plus 5 to 7 tiered items (S/A/B/C) from your brand and prompt, finds a stock photo for each item, and saves an image tier-board video to your library (9:16, items reveal one per beat). Costs no credits. Synchronous: the request returns when the deck is built, typically 10 to 40 seconds. Publish it with POST /posts using the deck from GET /content/{id}, or open it in the studio to edit first.
+
+- Scopes: `generations:write`
+- Credits: none
+- Rate limit: 20 per 300s
+- Supports `Idempotency-Key` header
+- CLI: `viraloop content ranking --prompt <text>`
+- MCP tool: `viraloop_create_ranking`
+
+Body fields:
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `prompt` | string | no | What the ranking is about. Omit to let the model pick from your brand. |
+| `mentionBusiness` | boolean | no | Make one of the items your brand (tier S, revealed last). Default true. |
+| `name` | string | no |  |
+| `workspaceId` | string | no | Workspace to operate in. Defaults to the team's default workspace. |
+
+Example:
+
+```bash
+curl -s -X POST "https://viraloop.io/api/v1/content/ranking" \
+  -H "Authorization: Bearer $VIRALOOP_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"prompt":"ranking the ways to grow on tiktok"}'
+```
+
+Response:
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "665f1b2a9c31a2b3c4d5e759",
+    "format": "Ranking",
+    "status": "ready",
+    "title": "ranking the ways to grow on tiktok:"
   }
 }
 ```
