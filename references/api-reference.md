@@ -1164,6 +1164,7 @@ Response:
       "id": "665f1b2a9c31a2b3c4d5e720",
       "name": "Maya",
       "niche": "fitness",
+      "style": "realistic",
       "imageUrl": "https://cdn.viraloop.io/influencers/maya.jpg",
       "turboEnabled": true
     }
@@ -1181,7 +1182,7 @@ Response:
 
 `POST /influencers`
 
-Creates an influencer from a base image you provide (a publicly reachable photo URL). A short animated preview is generated in the background when the team has credits. To generate a base image from a prompt instead, use the web app.
+Creates an influencer from a base image you provide (a publicly reachable image URL). A short animated preview is generated in the background when the team has credits. To generate a base image from a prompt instead, use the web app. Set style to "character" for a non-human influencer (a mascot, cartoon or stick figure): every prompt the platform builds for it then describes a stylized character instead of a real person, and gender/age/ethnicity do not apply.
 
 - Scopes: `influencers:write`
 - Credits: 10 credits for the optional animated preview (skipped when out of credits)
@@ -1195,12 +1196,14 @@ Body fields:
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
 | `name` | string | yes |  |
-| `imageUrl` | string | yes | Publicly reachable base photo of the persona |
+| `imageUrl` | string | yes | Publicly reachable base image of the persona |
 | `description` | string | no |  |
 | `niche` | string | no | One of the app's niche slugs, e.g. fitness, tech, food |
-| `gender` | `male` \| `female` | no |  |
-| `age` | integer | no |  |
-| `ethnicity` | string | no |  |
+| `style` | `realistic` \| `character` | no | Visual style. "realistic" (default) is a photoreal human; "character" is a stylized non-human persona. |
+| `characterDescription` | string | no | For style "character": what the character looks like, including its art style. Used to keep later generations on-model. |
+| `gender` | `male` \| `female` | no | Only meaningful for style "realistic". |
+| `age` | integer | no | Only meaningful for style "realistic". |
+| `ethnicity` | string | no | Only meaningful for style "realistic". |
 | `tags` | array | no |  |
 | `workspaceId` | string | no | Workspace to operate in. Defaults to the team's default workspace. |
 
@@ -1222,6 +1225,7 @@ Response:
     "id": "665f1b2a9c31a2b3c4d5e720",
     "name": "Maya",
     "niche": "fitness",
+    "style": "realistic",
     "imageUrl": "https://example.com/maya.jpg",
     "videoPreview": {
       "status": "pending",
@@ -1259,6 +1263,7 @@ Response:
     "name": "Maya",
     "description": "Energetic fitness coach",
     "niche": "fitness",
+    "style": "realistic",
     "imageUrl": "https://cdn.viraloop.io/influencers/maya.jpg",
     "turboEnabled": true,
     "allowedAngles": []
