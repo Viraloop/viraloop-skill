@@ -269,7 +269,7 @@ Response:
 
 `GET /accounts`
 
-Lists the TikTok, Instagram and YouTube accounts connected to the workspace. Use the returned ids in selectedAccounts when creating posts. Connecting accounts (OAuth) happens in the web app, not through this API.
+Lists the TikTok, Instagram, YouTube and Facebook accounts connected to the workspace. Use the returned ids in selectedAccounts when creating posts. Connecting accounts (OAuth) happens in the web app, not through this API.
 
 - Scopes: `accounts:read`
 - Credits: none
@@ -280,7 +280,7 @@ Query parameters:
 
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
-| `platform` | `tiktok` \| `instagram` \| `youtube` | no |  |
+| `platform` | `tiktok` \| `instagram` \| `youtube` \| `facebook` | no |  |
 | `ownerType` | `brand` \| `influencer` | no |  |
 | `workspaceId` | string | no | Workspace to operate in. Defaults to the team's default workspace. |
 
@@ -1577,6 +1577,8 @@ Body fields:
 | `appScreenshot` | string | yes | Hosted screenshot of your app; it is composited onto the phone screen as-is |
 | `presenterImage` | string | yes | Hosted photo of the presenter; should clearly show their face |
 | `script` | string | yes | What the presenter says about your app (max 1000 chars) |
+| `scene` | string | no | Optional setting and outfit: where the presenter is and what they wear, e.g. 'sunny kitchen, beige knit sweater' |
+| `voiceId` | string | no | ElevenLabs voice id, optionally prefixed with the model ('eleven_v3:<id>' for Eleven v3, 70+ languages; a bare id runs on multilingual v2). When set, the script is spoken word for word by that voice and lip-synced (Kling AI Avatar) instead of the video model improvising the voice; captions then match the script exactly. Recommended for non-English scripts. Omit to keep the video model's own voice. |
 | `duration` | integer | no | Seconds, default 8 |
 | `language` | string | no | Spoken language, default English |
 | `captionOverlay` | boolean | no | Transcribe the speech into a styled caption track. Default true. |
@@ -1681,7 +1683,8 @@ Body fields:
 | `gender` | string | no | Persona hint, ignored when avatarImageUrl is set |
 | `age` | string | no | Persona hint, ignored when avatarImageUrl is set |
 | `ethnicity` | string | no | Persona hint, ignored when avatarImageUrl is set |
-| `appearance` | string | no | Free-text look, ignored when avatarImageUrl is set |
+| `appearance` | string | no | Scene: setting and outfit, e.g. 'sunny kitchen, beige knit sweater'. With avatarImageUrl the face stays the reference's. |
+| `voiceId` | string | no | ElevenLabs voice id, optionally prefixed with the model ('eleven_v3:<id>' for Eleven v3, 70+ languages; a bare id runs on multilingual v2). When set, the script is spoken word for word by that voice and lip-synced (Kling AI Avatar) instead of the video model improvising the voice; captions then match the script exactly. Recommended for non-English scripts. Omit to keep the video model's own voice. |
 | `referenceImages` | array | no | Extra hosted reference images (props, setting) |
 | `captionOverlay` | boolean | no | Transcribe the speech into a styled caption track. Default true. |
 | `influencerId` | string | no | Link the result to this influencer |
@@ -1734,6 +1737,8 @@ Body fields:
 | `demoVideoUrl` | string | yes | Hosted demo/screen-recording that plays behind |
 | `demoThumb` | string | no | Poster image for the demo video |
 | `avatarPosition` | `bottom-left` \| `bottom-right` | no | Which corner the presenter sits in. Default bottom-right. |
+| `scene` | string | no | Optional outfit and look, e.g. 'navy blazer, glasses'. The background is always keyed out for the demo video. |
+| `voiceId` | string | no | ElevenLabs voice id, optionally prefixed with the model ('eleven_v3:<id>' for Eleven v3, 70+ languages; a bare id runs on multilingual v2). When set, the script is spoken word for word by that voice and lip-synced (Kling AI Avatar) instead of the video model improvising the voice; captions then match the script exactly. Recommended for non-English scripts. Omit to keep the video model's own voice. |
 | `duration` | integer | no | Seconds, default 10 |
 | `language` | string | no | Spoken language, default English |
 | `captionOverlay` | boolean | no | Transcribe the speech into a styled caption track. Default false. |
@@ -1789,7 +1794,7 @@ Body fields:
 | `gender` | string | no | Persona hint, ignored when avatarImageUrl is set |
 | `age` | string | no | Persona hint, ignored when avatarImageUrl is set |
 | `ethnicity` | string | no | Persona hint, ignored when avatarImageUrl is set |
-| `appearance` | string | no | Free-text look, ignored when avatarImageUrl is set |
+| `appearance` | string | no | Scene: setting and outfit, e.g. 'sunny kitchen, beige knit sweater'. With avatarImageUrl the face stays the reference's. |
 | `captionOverlay` | boolean | no | Transcribe the speech into a styled caption track. Default true. |
 | `influencerId` | string | no | Link the result to this influencer |
 | `name` | string | no |  |
@@ -1841,6 +1846,8 @@ Body fields:
 | `avatarImage` | string | no | Hosted photo of the person, composed with productImage |
 | `productImage` | string | no | Hosted photo of the product, composed with avatarImage |
 | `instruction` | string | no | Extra direction for the composed shot, e.g. 'outdoors, morning light' |
+| `scene` | string | no | Optional setting and outfit: where the spokesperson is and what they wear |
+| `voiceId` | string | no | ElevenLabs voice id, optionally prefixed with the model ('eleven_v3:<id>' for Eleven v3, 70+ languages; a bare id runs on multilingual v2). When set, the script is spoken word for word by that voice and lip-synced (Kling AI Avatar) instead of the video model improvising the voice; captions then match the script exactly. Recommended for non-English scripts. Omit to keep the video model's own voice. |
 | `duration` | integer | no | Seconds, default 8 |
 | `language` | string | no | Spoken language, default English |
 | `captionOverlay` | boolean | no | Transcribe the speech into a styled caption track. Default true. |
