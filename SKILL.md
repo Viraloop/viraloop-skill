@@ -37,6 +37,18 @@ If npm is unavailable, fall back to the raw HTTP API (see the last section).
 
 | Command | What it does | Endpoint |
 | --- | --- | --- |
+| `viraloop ads capabilities` | Get ad discovery availability | GET /ads/capabilities |
+| `viraloop ads search` | Search Meta ads delivered in the EU and UK | GET /ads/search |
+| `viraloop ads preview <ad-id>` | Get a competitor ad's creative preview | GET /ads/preview |
+| `viraloop ads advertisers <query>` | Find advertiser Page IDs by name | GET /ads/advertisers |
+| `viraloop ads saved` | List saved competitor ads | GET /ads/saved |
+| `viraloop ads save <ad-id>` | Save a competitor ad reference | POST /ads/saved |
+| `viraloop ads remove <id>` | Remove a saved ad reference | DELETE /ads/saved/{id} |
+| `viraloop ads recreate` | Start a brand ad adaptation draft | POST /ads/recreations |
+| `viraloop ads recreation <id>` | Get an ad adaptation draft | GET /ads/recreations/{id} |
+| `viraloop ads update-recreation <id>` | Save an edited image or video adaptation brief | PATCH /ads/recreations/{id} |
+| `viraloop ads draft-brief <id>` | Draft original ad copy and direction for your brand | POST /ads/recreations/{id}/brief |
+| `viraloop ads create-video <id>` | Create a video from a reviewed brand adaptation | POST /ads/recreations/{id}/video |
 | `viraloop whoami` | Introspect the API key | GET /me |
 | `viraloop credits` | Credit balance and ledger | GET /credits |
 | `viraloop workspaces list` | List workspaces | GET /workspaces |
@@ -61,6 +73,11 @@ If npm is unavailable, fall back to the raw HTTP API (see the last section).
 | `viraloop automations launch <id>` | Launch a reviewed automation | POST /automations/{id}/launch |
 | `viraloop automations cancel <id>` | Cancel an automation | POST /automations/{id}/cancel |
 | `viraloop automations posts <id>` | List an automation's generated posts | GET /automations/{id}/posts |
+| `viraloop automations post-update <id> <postId>` | Edit one of an automation's posts | PATCH /automations/{id}/posts/{postId} |
+| `viraloop automations ugc-scripts <id>` | Draft a UGC campaign's scripts | POST /automations/{id}/ugc/scripts |
+| `viraloop automations ugc-prepare <id> --variants <ids>` | Prepare and price UGC variants | POST /automations/{id}/ugc/prepare |
+| `viraloop automations ugc-compose <id>` | Compose the UGC campaign still | POST /automations/{id}/ugc/compose |
+| `viraloop automations ugc-render <id> --variants <ids>` | Render UGC variants | POST /automations/{id}/ugc/render |
 | `viraloop influencers list` | List AI influencers | GET /influencers |
 | `viraloop influencers create` | Create an AI influencer | POST /influencers |
 | `viraloop influencers get <id>` | Get an influencer | GET /influencers/{id} |
@@ -74,6 +91,7 @@ If npm is unavailable, fall back to the raw HTTP API (see the last section).
 | `viraloop content clone-video --image <url> --video <url>` | Clone a video's motion onto your character | POST /content/clone-video |
 | `viraloop content talking-head --script <text>` | Generate a talking-head UGC video | POST /content/talking-head |
 | `viraloop content talking-head-green-screen --script <text> --avatar <url> --demo <url>` | Generate a presenter over your demo video | POST /content/talking-head-green-screen |
+| `viraloop content meta-ad --prompt <text>` | Generate a static Meta ad creative | POST /content/meta-ad |
 | `viraloop content interview --script <text>` | Generate an interview (podcast clip) video | POST /content/interview |
 | `viraloop content product-spokesperson --script <text> --product <url>` | Generate a spokesperson holding your product | POST /content/product-spokesperson |
 | `viraloop content grid-video --prompt <text>` | Create a 2x2 grid video | POST /content/grid-video |

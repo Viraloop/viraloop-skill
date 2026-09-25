@@ -6,7 +6,663 @@ Base URL: `https://viraloop.io/api/v1`
 
 Authentication: `Authorization: Bearer vl_live_...` (or `X-API-Key`). Create keys at https://viraloop.io/settings/developers.
 
-Envelope: success responses are `{ "success": true, "data": ..., "pagination"?: { total, page, limit, pages } }`. Errors are `{ "success": false, "error": { "type", "message" } }` with types: `invalid_input`, `unauthorized`, `forbidden_scope`, `not_found`, `conflict`, `insufficient_credits`, `usage_limit_reached`, `rate_limited`, `internal_error`.
+Envelope: success responses are `{ "success": true, "data": ..., "pagination"?: { total, page, limit, pages } }`. Errors are `{ "success": false, "error": { "type", "message" } }` with types: `invalid_input`, `unauthorized`, `forbidden_scope`, `not_found`, `conflict`, `generation_pending`, `insufficient_credits`, `usage_limit_reached`, `rate_limited`, `internal_error`, `ads_unavailable`, `ads_not_configured`, `ads_name_search_unavailable`, `ads_cache_unavailable`, `ads_auth_expired`, `ads_access_denied`, `ads_upstream_error`, `ads_upstream_timeout`, `ads_search_expired`, `ads_daily_limit`, `ads_saved_limit`, `ads_preview_disabled`, `ads_preview_unavailable`, `ads_preview_daily_limit`.
+
+## ads
+
+### Get ad discovery availability
+
+`GET /ads/capabilities`
+
+Returns discovery and advertiser-search availability and saved-ad limits, without exposing Meta credentials. Saved references remain usable when discovery is paused.
+
+- Scopes: `ads:read`
+- Credits: none
+- CLI: `viraloop ads capabilities`
+- MCP tool: `viraloop_get_ad_discovery_capabilities`
+
+Query parameters:
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `workspaceId` | string | no | Brand workspace; defaults to the team's default workspace. |
+
+Example:
+
+```bash
+curl -s "https://viraloop.io/api/v1/ads/capabilities" \
+  -H "Authorization: Bearer $VIRALOOP_API_KEY"
+```
+
+Response:
+
+```json
+{
+  "success": true,
+  "data": {
+    "enabled": true,
+    "configured": true,
+    "advertiserSearch": false,
+    "mediaPreviews": true,
+    "savedLimit": 500
+  }
+}
+```
+
+### Search Meta ads delivered in the EU and UK
+
+`GET /ads/search`
+
+Searches the official Meta Ad Library by ad keywords or exact advertiser Page ID. Returns up to 25 ads, a resultToken for saving, its expiresAt deadline, and an opaque nextCursor. Cached repeats retain the original expiry and do not consume the team's discovery allowance. Ads have copy and public Meta preview links, not direct media files. No generation credits are charged.
+
+- Scopes: `ads:read`
+- Credits: none
+- CLI: `viraloop ads search`
+- MCP tool: `viraloop_search_meta_ads`
+
+Query parameters:
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `workspaceId` | string | no | Brand workspace; defaults to the team's default workspace. |
+| `q` | string | no | Ad text keywords. Supply q or pageId, not both. |
+| `pageId` | string | no | Exact Facebook advertiser Page ID; no name matching. |
+| `country` | `EU_UK` \| `AT` \| `BE` \| `BG` \| `HR` \| `CY` \| `CZ` \| `DK` \| `EE` \| `FI` \| `FR` \| `DE` \| `GR` \| `HU` \| `IE` \| `IT` \| `LV` \| `LT` \| `LU` \| `MT` \| `NL` \| `PL` \| `PT` \| `RO` \| `SK` \| `SI` \| `ES` \| `SE` \| `GB` | no |  |
+| `mediaType` | `ALL` \| `IMAGE` \| `VIDEO` | no |  |
+| `platform` | `ALL` \| `FACEBOOK` \| `INSTAGRAM` \| `MESSENGER` \| `AUDIENCE_NETWORK` \| `THREADS` \| `WHATSAPP` | no |  |
+| `status` | `ACTIVE` \| `INACTIVE` \| `ALL` | no |  |
+| `cursor` | string | no | Opaque nextCursor from this search. Keep filters unchanged. |
+
+Example:
+
+```bash
+curl -s "https://viraloop.io/api/v1/ads/search" \
+  -H "Authorization: Bearer $VIRALOOP_API_KEY"
+```
+
+Response:
+
+```json
+{
+  "success": true,
+  "data": {
+    "items": [
+      {
+        "adId": "2716161098763684",
+        "pageId": "123456789",
+        "pageName": "Example brand",
+        "bodies": [
+          "Create your next campaign."
+        ],
+        "titles": [],
+        "captions": [],
+        "descriptions": [],
+        "startedAt": "2026-09-01T00:00:00.000Z",
+        "stoppedAt": null,
+        "platforms": [
+          "facebook"
+        ],
+        "mediaType": null,
+        "observedStatus": "ACTIVE",
+        "fetchedAt": "2026-09-17T10:00:00.000Z",
+        "sourceUrl": "https://www.facebook.com/ads/library/?id=2716161098763684",
+        "provenance": {
+          "country": "EU_UK",
+          "mediaType": "ALL",
+          "platform": "ALL",
+          "status": "ACTIVE"
+        }
+      }
+    ],
+    "resultToken": "22df1b25-533f-4bd7-862a-aedc4a4ea0cc",
+    "fetchedAt": "2026-09-17T10:00:00.000Z",
+    "expiresAt": "2026-09-17T10:15:00.000Z",
+    "cacheHit": false
+  },
+  "pagination": {
+    "nextCursor": null,
+    "limit": 25
+  }
+}
+```
+
+### Get a competitor ad's creative preview
+
+`GET /ads/preview`
+
+Returns available image/video URLs from an isolated rendering of Meta's public Ad Library page. Requires an unexpired resultToken or an owned savedId and matching adId. Independently feature-gated, cached and capped; no generation credits. Media may be unavailable or expire. This uses Meta webpage rendering, not additional Graph API media fields. Never returns snapshot URLs or operator credentials.
+
+- Scopes: `ads:read`
+- Credits: none
+- CLI: `viraloop ads preview <ad-id>`
+- MCP tool: `viraloop_get_ad_creative_preview`
+
+Query parameters:
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `workspaceId` | string | no | Brand workspace; defaults to the team's default workspace. |
+| `adId` | string | yes |  |
+| `resultToken` | string | no | Unexpired search receipt containing this ad; supply this or savedId. |
+| `savedId` | string | no | Owned saved reference in the selected workspace; supply this or resultToken. |
+| `refresh` | `true` \| `false` | no | Refresh expired/broken media. Fresh cache entries have a 60-second refresh cooldown. |
+
+Example:
+
+```bash
+curl -s "https://viraloop.io/api/v1/ads/preview" \
+  -H "Authorization: Bearer $VIRALOOP_API_KEY"
+```
+
+Response:
+
+```json
+{
+  "success": true,
+  "data": {
+    "adId": "2716161098763684",
+    "status": "unavailable",
+    "items": [],
+    "fetchedAt": "2026-09-17T10:00:00.000Z",
+    "expiresAt": "2026-09-17T10:02:00.000Z",
+    "cacheHit": false
+  }
+}
+```
+
+### Find advertiser Page IDs by name
+
+`GET /ads/advertisers`
+
+Uses separately approved Meta Pages Search access. Select a returned Page ID and call searchMetaAds. If unavailable, use keyword search or a Page ID from an Ad Library advertiser link.
+
+- Scopes: `ads:read`
+- Credits: none
+- CLI: `viraloop ads advertisers <query>`
+- MCP tool: `viraloop_search_ad_advertisers`
+
+Query parameters:
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `workspaceId` | string | no | Brand workspace; defaults to the team's default workspace. |
+| `q` | string | yes |  |
+
+Example:
+
+```bash
+curl -s "https://viraloop.io/api/v1/ads/advertisers" \
+  -H "Authorization: Bearer $VIRALOOP_API_KEY"
+```
+
+Response:
+
+```json
+{
+  "success": true,
+  "data": {
+    "items": [
+      {
+        "pageId": "123456789",
+        "pageName": "Example brand"
+      }
+    ],
+    "cacheHit": false
+  }
+}
+```
+
+### List saved competitor ads
+
+`GET /ads/saved`
+
+Lists the workspace's saved ad references, newest saved first. Optionally filter by advertiser Page ID. Includes last-observed metadata and source links even after a Meta source disappears.
+
+- Scopes: `ads:read`
+- Credits: none
+- CLI: `viraloop ads saved`
+- MCP tool: `viraloop_list_saved_ads`
+
+Query parameters:
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `workspaceId` | string | no | Brand workspace; defaults to the team's default workspace. |
+| `pageId` | string | no |  |
+| `page` | integer | no |  |
+
+Example:
+
+```bash
+curl -s "https://viraloop.io/api/v1/ads/saved" \
+  -H "Authorization: Bearer $VIRALOOP_API_KEY"
+```
+
+Response:
+
+```json
+{
+  "success": true,
+  "data": {
+    "items": [],
+    "advertisers": [],
+    "savedCount": 0,
+    "savedLimit": 500
+  },
+  "pagination": {
+    "total": 0,
+    "page": 1,
+    "limit": 25,
+    "pages": 0
+  }
+}
+```
+
+### Save a competitor ad reference
+
+`POST /ads/saved`
+
+Saves server-held metadata from an unexpired search result into the brand workspace. Supply the adId and resultToken from searchMetaAds. Saving the same ad again is idempotent; client-supplied ad metadata is rejected.
+
+- Scopes: `ads:write`
+- Credits: none
+- CLI: `viraloop ads save <ad-id>`
+- MCP tool: `viraloop_save_ad`
+
+Body fields:
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `workspaceId` | string | no | Brand workspace; defaults to the team's default workspace. |
+| `adId` | string | yes |  |
+| `resultToken` | string | yes | resultToken from the search page containing this ad. |
+
+Example:
+
+```bash
+curl -s -X POST "https://viraloop.io/api/v1/ads/saved" \
+  -H "Authorization: Bearer $VIRALOOP_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"adId":"2716161098763684","resultToken":"22df1b25-533f-4bd7-862a-aedc4a4ea0cc"}'
+```
+
+Response:
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "665f1b2a9c31a2b3c4d5e6f8",
+    "ad": {
+      "adId": "2716161098763684",
+      "pageId": "123456789",
+      "pageName": "Example brand",
+      "bodies": [
+        "Create your next campaign."
+      ],
+      "titles": [],
+      "captions": [],
+      "descriptions": [],
+      "startedAt": "2026-09-01T00:00:00.000Z",
+      "stoppedAt": null,
+      "platforms": [
+        "facebook"
+      ],
+      "mediaType": null,
+      "observedStatus": "ACTIVE",
+      "fetchedAt": "2026-09-17T10:00:00.000Z",
+      "sourceUrl": "https://www.facebook.com/ads/library/?id=2716161098763684",
+      "provenance": {
+        "country": "EU_UK",
+        "mediaType": "ALL",
+        "platform": "ALL",
+        "status": "ACTIVE"
+      }
+    },
+    "savedAt": "2026-09-17T10:00:00.000Z"
+  }
+}
+```
+
+### Remove a saved ad reference
+
+`DELETE /ads/saved/{id}`
+
+Removes a saved reference from the selected workspace. Does not delete generated content or modify the source advertisement. Repeating a deletion succeeds.
+
+- Scopes: `ads:write`
+- Credits: none
+- CLI: `viraloop ads remove <id>`
+- MCP tool: `viraloop_delete_saved_ad`
+
+Query parameters:
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `workspaceId` | string | no | Brand workspace; defaults to the team's default workspace. |
+
+Example:
+
+```bash
+curl -s -X DELETE "https://viraloop.io/api/v1/ads/saved/<id>" \
+  -H "Authorization: Bearer $VIRALOOP_API_KEY"
+```
+
+Response:
+
+```json
+{
+  "success": true,
+  "data": {
+    "deleted": true
+  }
+}
+```
+
+### Start a brand ad adaptation draft
+
+`POST /ads/recreations`
+
+Creates a workspace-owned draft from a server-validated search receipt or saved ad, or forks a generated adaptation. Retains source metadata without Meta media URLs. Preparing a draft costs no generation credits. Reuse requestId on retries. Set the format, use generateAdRecreationBrief and review the editable brief/script. For images call createMetaAdCreative with recreationId, recreationRevision and requestId. For videos call createAdRecreationVideo with id, revision and requestId.
+
+- Scopes: `ads:read`, `ads:write`
+- Credits: none
+- Rate limit: 20 per 300s
+- CLI: `viraloop ads recreate`
+- MCP tool: `viraloop_create_ad_recreation`
+
+Body fields:
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `workspaceId` | string | no | Brand workspace; explicit IDs must belong to your team. |
+| `requestId` | string | yes | Unique creation request ID. Reuse on a network retry to reopen the same draft. |
+| `adId` | string | no |  |
+| `resultToken` | string | no |  |
+| `savedId` | string | no |  |
+| `contentId` | string | no | Fork an owned previously generated adaptation instead of supplying an ad reference. |
+
+Example:
+
+```bash
+curl -s -X POST "https://viraloop.io/api/v1/ads/recreations" \
+  -H "Authorization: Bearer $VIRALOOP_API_KEY"
+```
+
+Response:
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "111111111111111111111111",
+    "workspaceId": "222222222222222222222222",
+    "revision": 0,
+    "language": "English",
+    "source": {
+      "adId": "123456789",
+      "pageName": "Example advertiser",
+      "sourceUrl": "https://www.facebook.com/ads/library/?id=123456789",
+      "fetchedAt": "2026-09-21T12:00:00.000Z"
+    },
+    "settings": {
+      "format": "image",
+      "brief": {
+        "hook": "",
+        "benefit": "",
+        "visualDirection": "",
+        "supportingText": "",
+        "ctaText": ""
+      },
+      "ratio": "1:1",
+      "style": "cinematic",
+      "accentColor": "",
+      "productImageUrl": "",
+      "referenceImageUrl": ""
+    }
+  }
+}
+```
+
+### Get an ad adaptation draft
+
+`GET /ads/recreations/{id}`
+
+Returns the owned draft, its source snapshot, settings, language, revision, and most recently generated content ID. It remains available after the search receipt or Meta source expires.
+
+- Scopes: `ads:read`
+- Credits: none
+- CLI: `viraloop ads recreation <id>`
+- MCP tool: `viraloop_get_ad_recreation`
+
+Query parameters:
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `workspaceId` | string | no | Brand workspace; explicit IDs must belong to your team. |
+
+Example:
+
+```bash
+curl -s "https://viraloop.io/api/v1/ads/recreations/<id>" \
+  -H "Authorization: Bearer $VIRALOOP_API_KEY"
+```
+
+Response:
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "111111111111111111111111",
+    "workspaceId": "222222222222222222222222",
+    "revision": 0,
+    "language": "English",
+    "source": {
+      "adId": "123456789",
+      "pageName": "Example advertiser",
+      "sourceUrl": "https://www.facebook.com/ads/library/?id=123456789",
+      "fetchedAt": "2026-09-21T12:00:00.000Z"
+    },
+    "settings": {
+      "format": "image",
+      "brief": {
+        "hook": "",
+        "benefit": "",
+        "visualDirection": "",
+        "supportingText": "",
+        "ctaText": ""
+      },
+      "ratio": "1:1",
+      "style": "cinematic",
+      "accentColor": "",
+      "productImageUrl": "",
+      "referenceImageUrl": ""
+    }
+  }
+}
+```
+
+### Save an edited image or video adaptation brief
+
+`PATCH /ads/recreations/{id}`
+
+Saves image or video settings using the last observed revision; stale edits return 409. Set settings.format to image, talking-head, or hook-demo. Video settings include an editable script, timed scenes, presenter/product images and workspace-owned uploaded video asset IDs. Meta preview URLs are rejected. Source provenance cannot be edited. No generation credits.
+
+- Scopes: `ads:write`
+- Credits: none
+- CLI: `viraloop ads update-recreation <id>`
+- MCP tool: `viraloop_update_ad_recreation`
+
+Query parameters:
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `workspaceId` | string | no | Brand workspace; explicit IDs must belong to your team. |
+
+Body fields:
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `workspaceId` | string | no | Brand workspace; explicit IDs must belong to your team. |
+| `revision` | integer | yes |  |
+| `settings` | mixed | yes |  |
+
+Example:
+
+```bash
+curl -s -X PATCH "https://viraloop.io/api/v1/ads/recreations/<id>" \
+  -H "Authorization: Bearer $VIRALOOP_API_KEY"
+```
+
+Response:
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "111111111111111111111111",
+    "workspaceId": "222222222222222222222222",
+    "revision": 1,
+    "language": "English",
+    "source": {
+      "adId": "123456789",
+      "pageName": "Example advertiser",
+      "sourceUrl": "https://www.facebook.com/ads/library/?id=123456789",
+      "fetchedAt": "2026-09-21T12:00:00.000Z"
+    },
+    "settings": {
+      "format": "image",
+      "brief": {
+        "hook": "",
+        "benefit": "",
+        "visualDirection": "",
+        "supportingText": "",
+        "ctaText": ""
+      },
+      "ratio": "1:1",
+      "style": "cinematic",
+      "accentColor": "",
+      "productImageUrl": "",
+      "referenceImageUrl": ""
+    }
+  }
+}
+```
+
+### Draft original ad copy and direction for your brand
+
+`POST /ads/recreations/{id}/brief`
+
+Uses brand facts, tone, design guidelines, language, and competitor copy to draft an editable brief. Video drafts also receive a script and timed scene outline. Visual analysis uses only a supplied image or one preview frame of an owned uploaded reference video; it does not infer video motion or dialogue. Checks revision before saving; concurrent edits are preserved. No generation credits. Review before generating.
+
+- Scopes: `ads:read`, `ads:write`
+- Credits: none
+- Rate limit: 20 per 300s
+- CLI: `viraloop ads draft-brief <id>`
+- MCP tool: `viraloop_generate_ad_recreation_brief`
+
+Query parameters:
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `workspaceId` | string | no | Brand workspace; explicit IDs must belong to your team. |
+
+Body fields:
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `workspaceId` | string | no | Brand workspace; explicit IDs must belong to your team. |
+| `revision` | integer | yes |  |
+
+Example:
+
+```bash
+curl -s -X POST "https://viraloop.io/api/v1/ads/recreations/<id>/brief" \
+  -H "Authorization: Bearer $VIRALOOP_API_KEY"
+```
+
+Response:
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "111111111111111111111111",
+    "workspaceId": "222222222222222222222222",
+    "revision": 1,
+    "language": "English",
+    "source": {
+      "adId": "123456789",
+      "pageName": "Example advertiser",
+      "sourceUrl": "https://www.facebook.com/ads/library/?id=123456789",
+      "fetchedAt": "2026-09-21T12:00:00.000Z"
+    },
+    "settings": {
+      "format": "image",
+      "brief": {
+        "hook": "",
+        "benefit": "",
+        "visualDirection": "",
+        "supportingText": "",
+        "ctaText": ""
+      },
+      "ratio": "1:1",
+      "style": "cinematic",
+      "accentColor": "",
+      "productImageUrl": "",
+      "referenceImageUrl": ""
+    }
+  }
+}
+```
+
+### Create a video from a reviewed brand adaptation
+
+`POST /ads/recreations/{id}/video`
+
+Resolves the owned draft and exact revision, validates claims and language, and reuses its saved assets. Talking Head UGC generates a 9:16 video from the script and supplied presenter (4-15 seconds, 5 credits/second). Hook & Demo assembles two owned uploaded clips into an editable Content deck without generation credits; the script guides the user's recording, and no speech or footage is synthesized. Both retain source/brief provenance and use existing library/export paths. Retrying the same requestId returns the same Content without another debit. Failed paid generations refund once. Poll GET /content/{id}; open /content?contentId=ID to edit and export.
+
+- Scopes: `ads:read`, `generations:write`
+- Credits: Talking Head: 5 credits/second; Hook & Demo: none
+- Rate limit: 20 per 300s
+- CLI: `viraloop ads create-video <id>`
+- MCP tool: `viraloop_create_ad_recreation_video`
+
+Query parameters:
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `workspaceId` | string | no | Brand workspace; explicit IDs must belong to your team. |
+
+Body fields:
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `workspaceId` | string | no | Brand workspace; explicit IDs must belong to your team. |
+| `revision` | integer | yes |  |
+| `requestId` | string | yes | Keep this ID on retries, including after reload. A new ID requests a new output. |
+
+Example:
+
+```bash
+curl -s -X POST "https://viraloop.io/api/v1/ads/recreations/<id>/video" \
+  -H "Authorization: Bearer $VIRALOOP_API_KEY"
+```
+
+Response:
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "333333333333333333333333",
+    "format": "Talking Head UGC",
+    "status": "processing",
+    "statusUrl": "/api/v1/content/333333333333333333333333"
+  }
+}
+```
 
 ## me
 
@@ -148,6 +804,13 @@ Response:
           "description": "..."
         }
       ],
+      "campaignBriefs": [
+        {
+          "id": "665f1b2a9c31a2b3c4d5e6fa",
+          "title": "Save time on content",
+          "brief": "Show busy founders how Acme simplifies content planning."
+        }
+      ],
       "preferences": {
         "timezone": "America/New_York",
         "contentLanguage": "English"
@@ -212,7 +875,7 @@ Response:
 
 `GET /workspaces/{id}`
 
-Returns one workspace with its brand identity, positioning, tone of voice, content angles and preferences.
+Returns one workspace with its brand identity, positioning, tone of voice, content angles, saved campaign briefs and preferences. A campaign brief's brief text can be passed as prompt when creating a Meta ad creative.
 
 - Scopes: `workspaces:read`
 - Credits: none
@@ -253,6 +916,13 @@ Response:
       {
         "title": "...",
         "description": "..."
+      }
+    ],
+    "campaignBriefs": [
+      {
+        "id": "665f1b2a9c31a2b3c4d5e6fa",
+        "title": "Save time on content",
+        "brief": "Show busy founders how Acme simplifies content planning."
       }
     ],
     "preferences": {
@@ -333,6 +1003,7 @@ Body fields:
 | `format` | `walloftext` \| `slideshow` \| `greenscreen` | no | Force one content format. Omit to use the workspace's configured mix. |
 | `prompt` | string | no | What the batch should be about, e.g. 'why founders burn out on content'. Omit to let Turbo pick from the workspace's content angles. |
 | `influencerId` | string | no | Feature this AI influencer in every suggestion |
+| `slideCount` | integer | no | Exact slides per slideshow (3-10). Omit to let the model pick 4-10. |
 | `workspaceId` | string | no | Workspace to operate in. Defaults to the team's default workspace. |
 
 Example:
@@ -748,7 +1419,7 @@ Response:
 
 `POST /automations`
 
-Creates a draft automation: a batch of AI posts generated at once and published on a schedule. Set name, cadence, selectedAccounts and settings here or later via PATCH, then call generate, review the posts, and launch. Monthly automation quota depends on the plan.
+Creates a draft automation: a batch of AI posts generated at once and published on a schedule. Set name, cadence, selectedAccounts and settings here or later via PATCH, then call generate, review the posts, and launch. Monthly automation quota depends on the plan. With kind "ugc" it is a guided UGC campaign instead: set `ugc` (brief, characterId, voiceId, format), then draft scripts, prepare and render the variants you approve, and download or launch them.
 
 - Scopes: `automations:write`
 - Credits: none
@@ -761,6 +1432,8 @@ Body fields:
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
 | `name` | string | yes |  |
+| `kind` | `standard` \| `ugc` | no | "standard" batch automation (default) or a guided "ugc" campaign |
+| `ugc` | object | no | UGC campaign settings (kind "ugc" only) |
 | `cadence` | object | no | Posting cadence: how many posts per day, for how many days |
 | `selectedAccounts` | object | no | Social account ids per platform (from GET /accounts). At least one non-empty platform array is required. |
 | `settings` | object | no | Generation settings (defaults are sensible; all optional) |
@@ -896,7 +1569,7 @@ Response:
 
 `PATCH /automations/{id}`
 
-Updates name, cadence, selectedAccounts, settings, ownerType, influencerId or tiktokMode. Only allowed while the automation is in draft or review; sub-objects are replaced wholesale.
+Updates name, cadence, selectedAccounts, settings, ownerType, influencerId, tiktokMode or (UGC campaigns) ugc. Only allowed while the automation is in draft or review, plus active UGC campaigns; sub-objects are replaced wholesale except `ugc`, which is merged. Changing the character, voice, format or product image invalidates every prepared quote.
 
 - Scopes: `automations:write`
 - Credits: none
@@ -907,6 +1580,7 @@ Body fields:
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
 | `name` | string | no |  |
+| `ugc` | object | no | UGC campaign settings (kind "ugc" only) |
 | `cadence` | object | no | Posting cadence: how many posts per day, for how many days |
 | `selectedAccounts` | object | no | Social account ids per platform (from GET /accounts). At least one non-empty platform array is required. |
 | `settings` | object | no | Generation settings (defaults are sensible; all optional) |
@@ -1089,7 +1763,7 @@ Response:
 
 `GET /automations/{id}/posts`
 
-Lists the automation's generated posts (suggestions) in schedule order, for review before launching. Each carries caption, postCaption, hashtags, rationale and its assigned scheduledTime.
+Lists the automation's generated posts (suggestions) in schedule order, for review before launching. Each carries caption, postCaption, hashtags, rationale and its assigned scheduledTime. UGC campaign variants add script, hook, approved, the prepared quote (durationSeconds, credits) and the video state (idle, queued, processing, ready, failed) with its contentId.
 
 - Scopes: `automations:read`
 - Credits: none
@@ -1119,6 +1793,214 @@ Response:
       ],
       "status": "pending",
       "scheduledTime": "2026-07-06T13:00:00.000Z"
+    }
+  ]
+}
+```
+
+### Edit one of an automation's posts
+
+`PATCH /automations/{id}/posts/{postId}`
+
+Edits a generated post: postCaption, hashtags, scheduledTime and, for UGC campaign variants, script and approved. A script edit invalidates the variant's quote and approval and unlinks a video rendered from the old words (that video stays in the library). Only approved, finished variants with a future scheduledTime are launched.
+
+- Scopes: `automations:write`
+- Credits: none
+- CLI: `viraloop automations post-update <id> <postId>`
+- MCP tool: `viraloop_update_automation_post`
+
+Body fields:
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `script` | string | no |  |
+| `approved` | boolean | no |  |
+| `postCaption` | string | no |  |
+| `hashtags` | array | no |  |
+| `scheduledTime` | string | no | ISO 8601 date or datetime, e.g. 2026-07-03T10:00:00Z |
+
+Example:
+
+```bash
+curl -s -X PATCH "https://viraloop.io/api/v1/automations/<id>/posts/{postId}" \
+  -H "Authorization: Bearer $VIRALOOP_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"approved":true,"scheduledTime":"2026-10-01T15:00:00.000Z"}'
+```
+
+Response:
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "665f1b2a9c31a2b3c4d5e701",
+    "format": "ugcvideo",
+    "script": "Nobody tells you this about lecture notes...",
+    "approved": true,
+    "scheduledTime": "2026-10-01T15:00:00.000Z"
+  }
+}
+```
+
+### Draft a UGC campaign's scripts
+
+`POST /automations/{id}/ugc/scripts`
+
+Drafts the campaign's script variants from its brief (hook -> problem -> benefit -> CTA, each with a different hook), replacing unrendered variants; with variantId it re-rolls that one script in place. Free. Needs ugc.characterId. Review or edit the scripts (PATCH the post), then prepare and render.
+
+- Scopes: `automations:write`
+- Credits: none
+- CLI: `viraloop automations ugc-scripts <id>`
+- MCP tool: `viraloop_generate_ugc_scripts`
+
+Body fields:
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `count` | integer | no | How many variants (default ugc.variantCount) |
+| `variantId` | string | no | Re-roll only this variant |
+
+Example:
+
+```bash
+curl -s -X POST "https://viraloop.io/api/v1/automations/<id>/ugc/scripts" \
+  -H "Authorization: Bearer $VIRALOOP_API_KEY"
+```
+
+Response:
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "665f1b2a9c31a2b3c4d5e701",
+      "format": "ugcvideo",
+      "hook": "Relatable pain point",
+      "script": "Nobody tells you this about lecture notes...",
+      "approved": false,
+      "video": {
+        "status": "idle"
+      }
+    }
+  ]
+}
+```
+
+### Prepare and price UGC variants
+
+`POST /automations/{id}/ugc/prepare`
+
+Synthesizes each variant's speech with the campaign voice, measures the real duration and quotes the render in credits. Free. A variant whose speech exceeds 30 seconds gets tooLong and no quote: shorten its script and prepare again. Quotes are bound to the current script, voice, format, still and look; any change invalidates them.
+
+- Scopes: `automations:write`
+- Credits: none (the render quote is returned per variant)
+- CLI: `viraloop automations ugc-prepare <id> --variants <ids>`
+- MCP tool: `viraloop_prepare_ugc_variants`
+
+Body fields:
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `variantIds` | array | yes |  |
+
+Example:
+
+```bash
+curl -s -X POST "https://viraloop.io/api/v1/automations/<id>/ugc/prepare" \
+  -H "Authorization: Bearer $VIRALOOP_API_KEY"
+```
+
+Response:
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "665f1b2a9c31a2b3c4d5e701",
+      "durationSeconds": 24.3,
+      "credits": 350,
+      "audioUrl": "https://cdn.example.com/audio/voice.mp3"
+    },
+    {
+      "id": "665f1b2a9c31a2b3c4d5e702",
+      "tooLong": true,
+      "durationSeconds": 33.1,
+      "max": 30
+    }
+  ]
+}
+```
+
+### Compose the UGC campaign still
+
+`POST /automations/{id}/ugc/compose`
+
+Makes the one image every variant is animated from. Spokesperson campaigns: the character holding ugc.productImage (required before preparing). Talking campaigns with ugc.selfie true: the character re-staged as a front-camera phone selfie in a real room, which reads far more like filmed UGC than a posed portrait. Charged once per call, refunded on failure; the new still invalidates existing quotes, so prepare again afterwards. Synchronous, typically 20 to 60 seconds.
+
+- Scopes: `automations:write`
+- Credits: 3 credits per call (one image edit)
+- CLI: `viraloop automations ugc-compose <id>`
+- MCP tool: `viraloop_compose_ugc_still`
+
+Example:
+
+```bash
+curl -s -X POST "https://viraloop.io/api/v1/automations/<id>/ugc/compose" \
+  -H "Authorization: Bearer $VIRALOOP_API_KEY"
+```
+
+Response:
+
+```json
+{
+  "success": true,
+  "data": {
+    "kind": "selfie",
+    "url": "https://cdn.example.com/images/selfie.jpg"
+  }
+}
+```
+
+### Render UGC variants
+
+`POST /automations/{id}/ugc/render`
+
+Charges each variant's quote once and starts its video (two at a time per call; the prepared speech is reused). Fails before charging anything when credits are short or a quote is stale. Poll GET /automations/{id}/posts until video.status is ready or failed; a failed render is refunded once and can be rendered again. Download a finished video with GET /content/{contentId}/download.
+
+- Scopes: `automations:write`
+- Credits: the quoted credits per variant (per measured second of speech: 14 for the studio look, 3 for portrait)
+- Supports `Idempotency-Key` header
+- CLI: `viraloop automations ugc-render <id> --variants <ids>`
+- MCP tool: `viraloop_render_ugc_variants`
+
+Body fields:
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `variantIds` | array | yes |  |
+
+Example:
+
+```bash
+curl -s -X POST "https://viraloop.io/api/v1/automations/<id>/ugc/render" \
+  -H "Authorization: Bearer $VIRALOOP_API_KEY"
+```
+
+Response:
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "665f1b2a9c31a2b3c4d5e701",
+      "format": "ugcvideo",
+      "video": {
+        "status": "queued"
+      }
     }
   ]
 }
@@ -1182,10 +2064,10 @@ Response:
 
 `POST /influencers`
 
-Creates an influencer from a base image you provide (a publicly reachable image URL). A short animated preview is generated in the background when the team has credits. To generate a base image from a prompt instead, use the web app. Set style to "character" for a non-human influencer (a mascot, cartoon or stick figure): every prompt the platform builds for it then describes a stylized character instead of a real person, and gender/age/ethnicity do not apply.
+Creates an influencer from a base image you provide (a publicly reachable JPG, PNG or WebP URL; it is re-hosted as a provider-safe JPEG/PNG). A short animated preview is generated in the background when the team has credits, unless generatePreview is false. To generate a base image from a prompt instead, use the web app. Set style to "character" for a non-human influencer (a mascot, cartoon or stick figure): every prompt the platform builds for it then describes a stylized character instead of a real person, and gender/age/ethnicity do not apply.
 
 - Scopes: `influencers:write`
-- Credits: 10 credits for the optional animated preview (skipped when out of credits)
+- Credits: 10 credits for the optional animated preview (skipped when out of credits or when generatePreview is false)
 - Rate limit: 10 per 3600s
 - Supports `Idempotency-Key` header
 - CLI: `viraloop influencers create`
@@ -1205,6 +2087,7 @@ Body fields:
 | `age` | integer | no | Only meaningful for style "realistic". |
 | `ethnicity` | string | no | Only meaningful for style "realistic". |
 | `tags` | array | no |  |
+| `generatePreview` | boolean | no | Set false to skip the paid animated preview and only import the still (default true). |
 | `workspaceId` | string | no | Workspace to operate in. Defaults to the team's default workspace. |
 
 Example:
@@ -1563,7 +2446,7 @@ Response:
 Generates a UGC video of a presenter holding a phone with your app on screen, speaking your script (9:16). Runs two steps server-side: one image edit puts the phone in the presenter's hand, then Seedance animates it. Both media URLs must be hosted; upload them with POST /assets first. Costs 3 credits for the composite plus 5 credits per second of video (default 8s = 43 credits), deducted up front and refunded automatically on failure; insufficient credits returns HTTP 402. Asynchronous: returns 202, then poll GET /content/{id} until ready or failed (typically 2 to 10 minutes).
 
 - Scopes: `generations:write`
-- Credits: 3 credits + 5 credits per second (duration 4-15s; default 8s = 43 credits)
+- Credits: 3 credits + 5 credits per second (duration 4-15s; default 8s = 43 credits); with voiceId, priced per measured second of speech (max 30s)
 - Rate limit: 10 per 300s
 - Supports `Idempotency-Key` header
 - Terminal states: `ready`, `failed`
@@ -1579,7 +2462,7 @@ Body fields:
 | `script` | string | yes | What the presenter says about your app (max 1000 chars) |
 | `scene` | string | no | Optional setting and outfit: where the presenter is and what they wear, e.g. 'sunny kitchen, beige knit sweater' |
 | `voiceId` | string | no | ElevenLabs voice id, optionally prefixed with the model ('eleven_v3:<id>' for Eleven v3, 70+ languages; a bare id runs on multilingual v2). When set, the script is spoken word for word by that voice and lip-synced (Kling AI Avatar) instead of the video model improvising the voice; captions then match the script exactly. Recommended for non-English scripts. Omit to keep the video model's own voice. |
-| `duration` | integer | no | Seconds, default 8 |
+| `duration` | integer | no | Seconds, default 8. Only used without voiceId (4-15). With voiceId the clip is as long as the spoken script (max 30s) and is priced per measured second of speech. |
 | `language` | string | no | Spoken language, default English |
 | `captionOverlay` | boolean | no | Transcribe the speech into a styled caption track. Default true. |
 | `influencerId` | string | no | Link the result to this influencer |
@@ -1664,7 +2547,7 @@ Response:
 Generates a UGC video of a person speaking your script to camera (Seedance, 9:16, with voice). Describe the person with gender/age/ethnicity/appearance, or pin their exact likeness with avatarImageUrl (a hosted photo; upload one with POST /assets). Costs 5 credits per second (default 10s = 50 credits), deducted up front and refunded automatically on failure; insufficient credits returns HTTP 402. Asynchronous: returns 202, then poll GET /content/{id} until ready or failed (typically 2 to 10 minutes).
 
 - Scopes: `generations:write`
-- Credits: 5 credits per second (duration 4-15s; default 10s = 50 credits)
+- Credits: 5 credits per second (duration 4-15s; default 10s = 50 credits); with voiceId, priced per measured second of speech (max 30s)
 - Rate limit: 20 per 300s
 - Supports `Idempotency-Key` header
 - Terminal states: `ready`, `failed`
@@ -1677,7 +2560,7 @@ Body fields:
 | --- | --- | --- | --- |
 | `script` | string | yes | What the person says (max 1000 chars) |
 | `avatarImageUrl` | string | no | Hosted photo pinning the speaker's likeness. Overrides the persona fields. |
-| `duration` | integer | no | Seconds, default 10 |
+| `duration` | integer | no | Seconds, default 10. Only used without voiceId (4-15). With voiceId the clip is as long as the spoken script (max 30s) and is priced per measured second of speech. |
 | `language` | string | no | Spoken language, default English |
 | `mode` | `speaker` \| `scene` | no | speaker (default): head-and-shoulders to camera. scene: a wider shot. |
 | `gender` | string | no | Persona hint, ignored when avatarImageUrl is set |
@@ -1721,7 +2604,7 @@ Response:
 Generates a presenter speaking your script on a green screen, then composites them into the corner of your demo video at render time (9:16). Both media URLs must be hosted; upload them with POST /assets first. Costs 5 credits per second (default 10s = 50 credits), deducted up front and refunded automatically on failure; insufficient credits returns HTTP 402. Asynchronous: returns 202, then poll GET /content/{id} until ready or failed (typically 2 to 15 minutes).
 
 - Scopes: `generations:write`
-- Credits: 5 credits per second (duration 4-15s; default 10s = 50 credits)
+- Credits: 5 credits per second (duration 4-15s; default 10s = 50 credits); with voiceId, priced per measured second of speech (max 30s)
 - Rate limit: 20 per 300s
 - Supports `Idempotency-Key` header
 - Terminal states: `ready`, `failed`
@@ -1739,7 +2622,7 @@ Body fields:
 | `avatarPosition` | `bottom-left` \| `bottom-right` | no | Which corner the presenter sits in. Default bottom-right. |
 | `scene` | string | no | Optional outfit and look, e.g. 'navy blazer, glasses'. The background is always keyed out for the demo video. |
 | `voiceId` | string | no | ElevenLabs voice id, optionally prefixed with the model ('eleven_v3:<id>' for Eleven v3, 70+ languages; a bare id runs on multilingual v2). When set, the script is spoken word for word by that voice and lip-synced (Kling AI Avatar) instead of the video model improvising the voice; captions then match the script exactly. Recommended for non-English scripts. Omit to keep the video model's own voice. |
-| `duration` | integer | no | Seconds, default 10 |
+| `duration` | integer | no | Seconds, default 10. Only used without voiceId (4-15). With voiceId the clip is as long as the spoken script (max 30s) and is priced per measured second of speech. |
 | `language` | string | no | Spoken language, default English |
 | `captionOverlay` | boolean | no | Transcribe the speech into a styled caption track. Default false. |
 | `influencerId` | string | no | Link the result to this influencer |
@@ -1765,6 +2648,62 @@ Response:
     "format": "Talking Head Green Screen",
     "status": "processing",
     "statusUrl": "/api/v1/content/665f1b2a9c31a2b3c4d5e753"
+  }
+}
+```
+
+### Generate a static Meta ad creative
+
+`POST /content/meta-ad`
+
+Creates one finished JPG ad for Facebook or Instagram from workspace brand context: product hero, bold headline, supporting copy and CTA. Supports square (1:1), portrait feed (4:5) and story (9:16), with cinematic, minimal or bold styling. Optionally supply a product screenshot and exact copy. Follows the workspace's content language and generation rules. Costs 3 image credits, deducted up front and refunded on failure. Returns 202; poll GET /content/{id} until ready or failed, then GET /content/{id}/download for the original image. The saved brief reopens in the Meta Ad Creatives studio. Creates artwork only; does not launch a paid campaign. Generating from an ad adaptation draft (recreationId) also requires the ads:read scope.
+
+- Scopes: `generations:write`
+- Credits: 3 credits per image (Nano Banana 2)
+- Rate limit: 20 per 300s
+- Supports `Idempotency-Key` header
+- Terminal states: `ready`, `failed`
+- CLI: `viraloop content meta-ad --prompt <text>`
+- MCP tool: `viraloop_create_meta_ad`
+
+Body fields:
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `prompt` | string | no | Campaign brief, offer, audience, or creative direction. Defaults to workspace brand context. |
+| `ratio` | `1:1` \| `4:5` \| `9:16` | no | Square, portrait feed, or story aspect ratio |
+| `style` | `cinematic` \| `minimal` \| `bold` | no |  |
+| `template` | `product-hero` \| `before-after` \| `us-vs-them` \| `review` \| `feature-callouts` \| `promo-offer` \| `pain-point` \| `how-it-works` \| `notes-app` \| `ugc-photo` | no | Ad layout: product hero, before/after split, us-vs-them comparison, customer review, feature callouts, promo offer, pain point, how it works (3 steps), notes app, or UGC photo. review and promo-offer require headline (the real quote or offer). |
+| `productImageUrl` | string | no | Product photo or app screenshot to feature, uploaded with POST /assets |
+| `headline` | string | no | Exact on-image headline. Omit to let AI write it. |
+| `supportingText` | string | no | Exact supporting copy. Omit to let AI write it. |
+| `ctaText` | string | no | Exact button text. Omit for an on-brand call to action. |
+| `accentColor` | string | no | Headline and CTA accent color. Omit to use brand design guidelines. |
+| `name` | string | no | Title in the content library |
+| `workspaceId` | string | no | Workspace to operate in. Defaults to the team's default workspace. |
+| `recreationId` | string | no | Owned brand adaptation draft. Its saved settings override creative fields. |
+| `recreationRevision` | integer | no | The reviewed draft revision; required with recreationId. |
+| `requestId` | string | no | Required with recreationId. Reuse on retries to avoid duplicate charges. |
+
+Example:
+
+```bash
+curl -s -X POST "https://viraloop.io/api/v1/content/meta-ad" \
+  -H "Authorization: Bearer $VIRALOOP_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"prompt":"Show founders how our app simplifies weekly content planning","ratio":"4:5","style":"cinematic","ctaText":"Start creating"}'
+```
+
+Response:
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "665f1b2a9c31a2b3c4d5e75e",
+    "format": "Meta Ad Creatives",
+    "status": "processing",
+    "statusUrl": "/api/v1/content/665f1b2a9c31a2b3c4d5e75e"
   }
 }
 ```
@@ -1830,7 +2769,7 @@ Response:
 Generates a UGC video of a person holding your product and talking about it (Seedance, 9:16, with voice). Give either spokespersonImage (a shot of someone already holding it) or avatarImage plus productImage, which are composed into one first. All media URLs must be hosted; upload them with POST /assets first. Costs 5 credits per second (default 8s = 40 credits) plus 3 credits when we compose the shot, deducted up front and refunded automatically on failure; insufficient credits returns HTTP 402. Asynchronous: returns 202, then poll GET /content/{id} until ready or failed (typically 2 to 10 minutes).
 
 - Scopes: `generations:write`
-- Credits: 5 credits per second (duration 4-15s; default 8s = 40 credits), +3 when composing the shot
+- Credits: 5 credits per second (duration 4-15s; default 8s = 40 credits), +3 when composing the shot; with voiceId, priced per measured second of speech (max 30s)
 - Rate limit: 20 per 300s
 - Supports `Idempotency-Key` header
 - Terminal states: `ready`, `failed`
@@ -1848,7 +2787,7 @@ Body fields:
 | `instruction` | string | no | Extra direction for the composed shot, e.g. 'outdoors, morning light' |
 | `scene` | string | no | Optional setting and outfit: where the spokesperson is and what they wear |
 | `voiceId` | string | no | ElevenLabs voice id, optionally prefixed with the model ('eleven_v3:<id>' for Eleven v3, 70+ languages; a bare id runs on multilingual v2). When set, the script is spoken word for word by that voice and lip-synced (Kling AI Avatar) instead of the video model improvising the voice; captions then match the script exactly. Recommended for non-English scripts. Omit to keep the video model's own voice. |
-| `duration` | integer | no | Seconds, default 8 |
+| `duration` | integer | no | Seconds, default 8. Only used without voiceId (4-15). With voiceId the clip is as long as the spoken script (max 30s) and is priced per measured second of speech. |
 | `language` | string | no | Spoken language, default English |
 | `captionOverlay` | boolean | no | Transcribe the speech into a styled caption track. Default true. |
 | `influencerId` | string | no | Link the result to this influencer |
